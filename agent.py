@@ -5,9 +5,10 @@ from collections import deque
 import numpy as np
 from model import QTrainer, Linear_QNet
 from collections import Iterable
+import plot
 
 MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
+BATCH_SIZE = 12
 LR = 0.001
 
 def flatten(items):
@@ -18,21 +19,20 @@ def flatten(items):
         else:
             yield elem
 
-
 class Agent:
-    
+
     def __init__(self):
+        self.n_games = 0
         self.n_runs = 0
-        self.model = Linear_QNet(40, 512, 28)
+        self.model = Linear_QNet(48, 512, 28)
         self.gamma = 0.99 # discount rate
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         self.epsilon = 0 # random rate
         self.memory = deque(maxlen=MAX_MEMORY)
 
     def get_state(self, game):
-        state = [[list(i.values()) for i in game.iceBergs], [game.Attacks]]
+        state = [[list(i.values()) for i in game.iceBergs]]
         state = list(flatten(state))
-        self.model.linear1 = torch.nn.Linear(len(state), 512)
         return np.array(state, dtype=int)
     
     def remember(self, state, action, reward, next_state, done):
@@ -71,10 +71,10 @@ class Agent:
         return final_move
     
 def train():
-    plot_wins = []
-    plot_mean_winner = []
-    turns = 0
-    shortest_game = 0
+    avg = []
+    n_games_l = []
+    avg_sum = 0
+    shortest_game = 1e100
     agent = Agent()
     sim = SimulationAI(10000, 10000)
     while True:
@@ -94,12 +94,17 @@ def train():
             # train long memoery
             sim.reset()
             agent.n_games += 1
+            avg_sum += turn
+            avg.append(avg_sum/agent.n_games)
+            n_games_l.append(agent.n_games)
             agent.train_long_memory()
-            
             if turn < shortest_game:
                 shortest_game = turn
                 agent.model.save()
-            print('Game Number: {0} | Turns: {1} | Fastest game: {2}', agent.n_runs, turn, shortest_game)
+            # print("avg", avg_sum/agent.n_games)
+            
+            # print('Game Number: {0} | Turns: {1} | Fastest game: {2}'.format(agent.n_games, turn, shortest_game))
 
+            plot.plot(n_games_l, avg)
 if __name__ == '__main__':
     train()

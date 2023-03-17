@@ -87,15 +87,18 @@ class SimulationAI:
                             self.iceBergs[index]["troops"] =- group[2]
             else: 
                 group[-1] -= 1
-
-        for i in Arrived_l: del self.Attacks[i]
-    
+        
+        Arrived_l = Arrived_l.sort(reverse=True)
+        try:
+            for i in Arrived_l: del self.Attacks[i]
+        except:
+            pass
     def play(self, actions = []):
         try:
-            for action in actions[0]:
-                self.sendTroops(action[0], action[1], action[2])
+            for i in range(0, 21, 3):
+                self.sendTroops(actions[i], actions[i+1], actions[i+2])
             
-            for upgrade in actions[1]:
+            for upgrade in actions[-7:]:
                 self.upgradeLevel(upgrade)
         except:
             pass
