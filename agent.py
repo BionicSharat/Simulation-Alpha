@@ -24,7 +24,7 @@ class Agent:
     def __init__(self):
         self.n_games = 0
         self.n_runs = 0
-        self.model = Linear_QNet(48, 512, 28)
+        self.model = Linear_QNet(input_size=48, hidden_size=512, output_sizes=[100, 7, 2])
         self.gamma = 0.99 # discount rate
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         self.epsilon = 0 # random rate
@@ -47,8 +47,8 @@ class Agent:
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
-        for state, action, reward, next_state, done in mini_sample:
-             self.trainer.train_step(state, action, reward, next_state, done)
+        # for state, action, reward, next_state, done in mini_sample:
+        #      self.trainer.train_step(state, action, reward, next_state, done)
 
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)

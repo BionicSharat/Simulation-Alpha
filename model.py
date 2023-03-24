@@ -14,17 +14,23 @@ def flatten(items):
             yield elem
 
 class Linear_QNet(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size, hidden_size, output_sizes):
         super(Linear_QNet, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, hidden_size/2)
-        self.outputs = nn.ModuleList([nn.Linear(64, 1) for _ in range(output_size)])
+        self.fc2 = nn.Linear(hidden_size, hidden_size//2)
+        self.fc3 = nn.Linear(hidden_size//2, hidden_size//4)
+        self.outputs1 = nn.ModuleList([nn.Linear(128, 100) for _ in range(output_sizes[0])])
+        self.outputs2 = nn.ModuleList([nn.Linear(128, 7) for _ in range(output_sizes[1])])
+        self.outputs3 = nn.ModuleList([nn.Linear(128, 2) for _ in range(output_sizes[2])])
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = torch.relu(self.fc3(x))
+        outputs1 = [output(x) for output in self.outputs1]
+        outputs2 = [output(x) for output in self.outputs2]
+        outputs3 = [output(x) for output in self.outputs3]
+        return outputs1, outputs2, outputs3
 
     def save(self, file_name='model.pth'):
         model_folder_path = './model'
@@ -57,19 +63,57 @@ class QTrainer:
             done = (done, )
 
         # 1: predicted Q values with current state
-        pred = self.model(state)
+        outputs1, outputs2, outputs3 = self.model(state)
 
-        target = pred.clone()
+        target1 = []
         for idx in range(len(done)):
             Q_new = reward[idx]
             if not done[idx]:
-                Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx]))
+                Q_new = reward[idx] + self.gamma * max([q[0] for q in self.model(next_state[idx])[0]])
 
-            target[idx][torch.argmax(action[idx]).item()] = Q_new
+            target1.append(Q_new)
     
-        # 2: Q_new = r + y * max(next_predicted Q value)
-        self.optimizer.zero_grad()
-        loss = self.criterion(target, pred)
-        loss.backward()
+        target2 = []
+        for idx in range(len(done)):
+            Q_new = reward[idx]
+            if not done[idx]:
+                Q_new = reward[idx] + self.gamma * max([q[0] for q in self.model(next_state[idx])[1]])
 
+            target2.append(Q_new)
+
+        target3 = []
+        for idx in range(len(done)):
+            Q_new = reward[idx]
+            if not done[idx]:
+                Q_new = reward[idx] + self.gamma * max([q[0] for q in self.model(next_state[idx])[2]])
+
+            target3.append(Q_new)
+
+        # convert to tensor
+        target1 = torch.tensor(target1, dtype=torch.float)
+        target2 = torch.tensor(target2, dtype=torch.float)
+        target3 = torch.tensor(target3, dtype=torch.float)
+
+        # clear gradients
+        self.optimizer.zero_grad()
+        # calculate loss
+        output_tensor1 = torch.cat(outputs1, dim=0)
+        output_index1 = torch.argmax(output_tensor1[action[0]])
+
+        output_tensor2 = torch.cat(outputs2, dim=0)
+        output_index2 = torch.argmax(output_tensor2[action[0]])
+
+        output_tensor3 = torch.cat(outputs3, dim=0)
+        output_index3 = torch.argmax(output_tensor3[action[0]])
+
+        loss1 = self.criterion(output_index1, target1)
+        loss2 = self.criterion(output_index2, target2)
+        loss3 = self.criterion(output_index3, target3)
+        loss = sum(flatten([loss1, loss2, loss3]))
+
+        # backpropagation
+        loss.backward()
         self.optimizer.step()
+
+    def flatten(l):
+        return [item for sublist in l for item in sublist]
