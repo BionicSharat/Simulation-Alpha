@@ -54,9 +54,9 @@ class Agent:
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        self.epsilon = 100 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
+        self.epsilon = 50 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
         final_move = []
-        if random.randint(0, 200) < self.epsilon:
+        if random.randint(0, 80) < self.epsilon:
             for i in range(7):
                 final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 100)])
             for i in range(7):

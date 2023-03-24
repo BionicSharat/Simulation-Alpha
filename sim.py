@@ -25,7 +25,7 @@ class SimulationAI:
         self.iceBergs
 
     def reset(self):
-        self.Attacks = [] # ["owner", "loc", "troops", "startingLocation", "endLocation"]
+        self.Attacks = [] # [owner_start, end_loc, amountOfTroops, turns_till_arrive]
         self.Turn = 0
 
         self.Map = np.zeros((self.h, self.w))
@@ -46,7 +46,7 @@ class SimulationAI:
 
     def checkWin(self):
         reward = 0
-        if (len([1 for i in self.iceBergs if i["Owner"] == 0 or i["Owner"] == 1]) == 8) or self.iceBergs[0]["Owner"] == self.iceBergs[7]["Owner"]:
+        if (len([1 for i in self.iceBergs if i["Owner"] == 0 or i["Owner"] == 1]) == 8) or self.iceBergs[0]["Owner"] == self.iceBergs[-1]["Owner"]:
             if self.iceBergs[-1]["Owner"] == 0:
                 reward = 10
             elif self.iceBergs[0]["Owner"] == 1:
@@ -65,13 +65,17 @@ class SimulationAI:
         return round(distance/MovingSpeed)
 
     def upgradeLevel(self, idValue):
-        self.iceBergs[self.indexById(idValue)]["l"] += 1
+        if (self.iceBergs[self.indexById(idValue)]["troops"] >= (self.iceBergs[self.indexById(idValue)]["l"] + 1) * 10):
+            self.iceBergs[self.indexById(idValue)]["l"] += 1
+            self.iceBergs[self.indexById(idValue)]["troops"] -= self.iceBergs[self.indexById(idValue)]["l"] * 10
+
 
     def sendTroops(self, idStart, idEnd, amountOfTroops):
         turns_till_arrive = self.turnsTillArrival(self.iceBergs[self.indexById(idStart)]["loc"], self.iceBergs[self.indexById(idEnd)]["loc"])
         end_loc = self.iceBergs[self.indexById(idEnd)]["loc"]
         owner_start = self.iceBergs[idStart]["Owner"]
-        self.Attacks.append([owner_start, end_loc, amountOfTroops, turns_till_arrive])
+        if (owner_start == 0):
+            self.Attacks.append([owner_start, end_loc, amountOfTroops, turns_till_arrive])
 
     def checkTroopsReached(self):
         Arrived_l = []
@@ -87,12 +91,11 @@ class SimulationAI:
                             self.iceBergs[index]["troops"] =- group[2]
             else: 
                 group[-1] -= 1
-        
-        Arrived_l = Arrived_l.sort(reverse=True)
-        try:
-            for i in Arrived_l: del self.Attacks[i]
-        except:
-            pass
+        deleted_l = self.Attacks
+        for index in sorted(Arrived_l, reverse=True):
+            del deleted_l[index]
+        self.Attacks = deleted_l
+
     def play(self, actions = []):
         try:
             for i in range(0, 21, 3):
