@@ -8,7 +8,7 @@ from collections import Iterable
 import plot
 
 MAX_MEMORY = 100_000
-BATCH_SIZE = 12
+BATCH_SIZE = 1000
 LR = 0.001
 
 def flatten(items):
@@ -32,6 +32,7 @@ class Agent:
 
     def get_state(self, game):
         state = [[list(i.values()) for i in game.iceBergs]]
+        # print(state)
         state = list(flatten(state))
         return np.array(state, dtype=int)
     
@@ -40,20 +41,20 @@ class Agent:
     
     def train_long_memory(self):
         if (len(self.memory) < BATCH_SIZE):
-            mini_sample = random.sample(self.memory, BATCH_SIZE) # list of tuples
+            mini_sample = random.sample(self.memory, BATCH_SIZE if len(self.memory) > BATCH_SIZE else len(self.memory)) # list of tuples
         else:
             mini_sample = self.memory
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
-        # for state, action, reward, next_state, done in mini_sample:
-        #     self.ta
+        for state, action, reward, next_state, done in mini_sample:
+             self.trainer.train_step(state, action, reward, next_state, done)
 
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        self.epsilon = 80 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
+        self.epsilon = 100 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
         final_move = []
         if random.randint(0, 200) < self.epsilon:
             for i in range(7):

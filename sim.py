@@ -99,6 +99,7 @@ class SimulationAI:
                 self.sendTroops(actions[i], actions[i+1], actions[i+2])
             
             for upgrade in actions[-7:]:
+                print(upgrade)
                 self.upgradeLevel(upgrade)
         except:
             pass

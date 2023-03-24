@@ -16,12 +16,14 @@ def flatten(items):
 class Linear_QNet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(Linear_QNet, self).__init__()
-        self.linear1 = nn.Linear(input_size, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, output_size)
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size)
+        self.fc3 = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = self.linear2(x)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
         return x
 
     def save(self, file_name='model.pth'):
@@ -43,9 +45,7 @@ class QTrainer:
 
     def train_step(self, state, action, reward, next_state, done):
         state = torch.tensor(state, dtype=torch.float)
-        state.flatten()
         next_state = torch.tensor(next_state, dtype=torch.float)
-        state.flatten()
         action = torch.tensor(action, dtype=torch.float) 
         reward = torch.tensor(reward, dtype=torch.float)
 
@@ -65,7 +65,7 @@ class QTrainer:
             if not done[idx]:
                 Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx]))
 
-            target[idx] = action[idx] * Q_new
+            target[idx][torch.argmax(action[idx]).item()] = Q_new
     
         # 2: Q_new = r + y * max(next_predicted Q value)
         self.optimizer.zero_grad()
