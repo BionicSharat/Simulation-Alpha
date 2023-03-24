@@ -54,9 +54,9 @@ class Agent:
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        self.epsilon = 50 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
+        self.epsilon = 80 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
         final_move = []
-        if random.randint(0, 80) < self.epsilon:
+        if random.randint(0, 50) < self.epsilon:
             for i in range(7):
                 final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 100)])
             for i in range(7):
@@ -96,7 +96,7 @@ def train():
             sim.reset()
             agent.n_games += 1
             avg_sum += turn
-            avg.append(avg_sum/agent.n_games)
+            avg.append(turn)
             n_games_l.append(agent.n_games)
             agent.train_long_memory()
             if turn < shortest_game:

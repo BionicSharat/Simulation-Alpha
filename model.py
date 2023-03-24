@@ -17,8 +17,8 @@ class Linear_QNet(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(Linear_QNet, self).__init__()
         self.fc1 = nn.Linear(input_size, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, hidden_size)
-        self.fc3 = nn.Linear(hidden_size, output_size)
+        self.fc2 = nn.Linear(hidden_size, hidden_size/2)
+        self.outputs = nn.ModuleList([nn.Linear(64, 1) for _ in range(output_size)])
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
@@ -46,7 +46,7 @@ class QTrainer:
     def train_step(self, state, action, reward, next_state, done):
         state = torch.tensor(state, dtype=torch.float)
         next_state = torch.tensor(next_state, dtype=torch.float)
-        action = torch.tensor(action, dtype=torch.float) 
+        action = torch.tensor(action, dtype=torch.int64) 
         reward = torch.tensor(reward, dtype=torch.float)
 
         if len(state.shape) == 1:

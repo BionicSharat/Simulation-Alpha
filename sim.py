@@ -48,9 +48,9 @@ class SimulationAI:
         reward = 0
         if (len([1 for i in self.iceBergs if i["Owner"] == 0 or i["Owner"] == 1]) == 8) or self.iceBergs[0]["Owner"] == self.iceBergs[-1]["Owner"]:
             if self.iceBergs[-1]["Owner"] == 0:
-                reward = 10
+                reward = 100 - 10 * self.Turn
             elif self.iceBergs[0]["Owner"] == 1:
-                reward = -10
+                reward = -100
             return True, reward
         else:
             return False, 0
@@ -88,21 +88,23 @@ class SimulationAI:
                             self.iceBergs[index]["troops"] = abs(self.iceBergs[index]["troops"] - group[2])
                             Arrived_l.append(indexAttack)
                         else: 
-                            self.iceBergs[index]["troops"] =- group[2]
+                            self.iceBergs[index]["troops"] -= group[2]
             else: 
                 group[-1] -= 1
         deleted_l = self.Attacks
         for index in sorted(Arrived_l, reverse=True):
-            del deleted_l[index]
+            try:
+                del deleted_l[index]
+            except:
+                print("err")
         self.Attacks = deleted_l
-
+        
     def play(self, actions = []):
         try:
             for i in range(0, 21, 3):
                 self.sendTroops(actions[i], actions[i+1], actions[i+2])
             
             for upgrade in actions[-7:]:
-                print(upgrade)
                 self.upgradeLevel(upgrade)
         except:
             pass

@@ -13,6 +13,5 @@ def plot(n_games, avg_turns):
     plt.plot()
     plt.plot(n_games, avg_turns)
     ax = plt.gca()
-    ax.set_ylim([0, 13])
     plt.show(block=False)
     plt.pause(.1)
