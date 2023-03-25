@@ -54,7 +54,7 @@ class SimulationAI:
                 reward = -10
             return True, reward
         else:
-            return False, 0
+            return False, -0.01 * self.Turn
 
     def indexById(self, idValue):
         for index, i in enumerate(self.iceBergs):
@@ -74,11 +74,10 @@ class SimulationAI:
         turns_till_arrive = self.turnsTillArrival(self.iceBergs[self.indexById(idStart)]["loc"], self.iceBergs[self.indexById(idEnd)]["loc"])
         end_loc = self.iceBergs[self.indexById(idEnd)]["loc"]
         owner_start = self.iceBergs[idStart]["Owner"]
-        if (owner_start == 0):
-            if amountOfTroops > self.iceBergs[self.indexById(idStart)]:
+        if (owner_start == 0 and amountOfTroops != 0):
+            if amountOfTroops > self.iceBergs[self.indexById(idStart)]["troops"]:
                 self.Attacks.append([owner_start, end_loc, self.iceBergs[self.indexById(idStart)]["troops"], turns_till_arrive])
                 self.iceBergs[self.indexById(idStart)]["troops"] = 0
-                IcebergGame.send_attack([1300/10, 600/10], [5070/10, 600/10], 30)
             else:
                 self.Attacks.append([owner_start, end_loc, amountOfTroops, turns_till_arrive])
                 self.iceBergs[self.indexById(idStart)]["troops"] -= amountOfTroops
@@ -127,13 +126,4 @@ class SimulationAI:
         
         conquered_reward = self.checkTroopsReached()
         self.Turn += 1
-
-        return reward + conquered_reward, win, self.Turn
-
-# Game
-# sim = SimulationAI(10000, 10000)
-# while True:
-#     sim.sendTroops(0, 4, 2)
-#     sim.play() # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
-#     state = [[list(i.values()) for i in sim.iceBergs], [sim.Attacks]]
-#     break
+        return reward + conquered_reward * 1, win, self.Turn

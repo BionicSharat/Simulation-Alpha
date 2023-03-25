@@ -33,7 +33,6 @@ class Agent:
 
     def get_state(self, game):
         state = [[list(i.values()) for i in game.iceBergs]]
-        # print(state)
         state = list(flatten(state))
         return np.array(state, dtype=int)
     
@@ -48,8 +47,6 @@ class Agent:
 
         states, actions, rewards, next_states, dones = zip(*mini_sample)
         self.trainer.train_step(states, actions, rewards, next_states, dones)
-        # for state, action, reward, next_state, done in mini_sample:
-        #      self.trainer.train_step(state, action, reward, next_state, done)
 
     def train_short_memory(self, state, action, reward, next_state, done):
         self.trainer.train_step(state, action, reward, next_state, done)
@@ -57,13 +54,12 @@ class Agent:
     def get_action(self, state):
         self.epsilon = 50 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
         final_move = []
-        print(random.randint(0, 80) < self.epsilon)
-        if random.randint(0, 50) < self.epsilon:
-            # for i in range(7):
-            #     final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 1000)])
-            # for i in range(7):
-            #     final_move.append(random.randint(0, 1))
-            final_move = [0, 7, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        r_value = random.randint(0, 100)
+        if r_value < self.epsilon and r_value > 10:
+            for i in range(7):
+                final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 1000)])
+            for i in range(7):
+                final_move.append(random.randint(0, 1))
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
@@ -76,8 +72,8 @@ class Agent:
             for i in range(7):
                 final_move.extend([l[i], l[i+7], l[i+14]])
             final_move.extend([l[i] for i in range(21,28)]) 
-
-            print(final_move, len(final_move))   
+        
+        print(final_move)
         return final_move
         
 def train():
@@ -115,7 +111,6 @@ def train():
                 shortest_game = turn
                 agent.model.save()
             print("avg", avg_sum/agent.n_games)
-            
             print('Game Number: {0} | Turns: {1} | Fastest game: {2}'.format(agent.n_games, turn, shortest_game))
 
             plot.plot(n_games_l, avg)
