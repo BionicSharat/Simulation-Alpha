@@ -30,7 +30,7 @@ class Linear_QNet(nn.Module):
         outputs1 = [output(x) for output in self.outputs1]
         outputs2 = [output(x) for output in self.outputs2]
         outputs3 = [output(x) for output in self.outputs3]
-        return outputs1, outputs2, outputs3
+        return [outputs1, outputs2, outputs3]
 
     def save(self, file_name='model.pth'):
         model_folder_path = './model'
@@ -47,7 +47,9 @@ class QTrainer:
         self.gamma = gamma
         self.model = model
         self.optimizer = optim.Adam(model.parameters(), lr=self.lr)
-        self.criterion = nn.MSELoss()
+        self.criterion1 = nn.MSELoss()
+        self.criterion2 = nn.MSELoss()
+        self.criterion3 = nn.MSELoss()
 
     def train_step(self, state, action, reward, next_state, done):
         state = torch.tensor(state, dtype=torch.float)
@@ -63,57 +65,49 @@ class QTrainer:
             done = (done, )
 
         # 1: predicted Q values with current state
-        outputs1, outputs2, outputs3 = self.model(state)
+        pred = self.model(state)
+        pred1 = pred[0]
+        pred2 = pred[1]
+        pred3 = pred[2]
 
-        target1 = []
-        for idx in range(len(done)):
-            Q_new = reward[idx]
-            if not done[idx]:
-                Q_new = reward[idx] + self.gamma * max([q[0] for q in self.model(next_state[idx])[0]])
-
-            target1.append(Q_new)
+        losses1 = []
+        for i in range(7):
+            target = pred1[i].clone()
+            for idx in range(len(done)):
+                Q_new = reward[idx]
+                if not done[idx]:
+                    Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx])[0][i])
+                target[idx][torch.argmax(action[idx][i]).item()] = Q_new
+            losses1.append(self.criterion1(target, pred1[i]))
     
-        target2 = []
-        for idx in range(len(done)):
-            Q_new = reward[idx]
-            if not done[idx]:
-                Q_new = reward[idx] + self.gamma * max([q[0] for q in self.model(next_state[idx])[1]])
+        losses2 = []
+        for i in range(14):
+            target = pred2[i].clone()
+            for idx in range(len(done)):
+                Q_new = reward[idx]
+                if not done[idx]:
+                    Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx])[1][i])
+                target[idx][torch.argmax(action[idx][i+7]).item()] = Q_new
+            losses2.append(self.criterion2(target, pred2[i]))
 
-            target2.append(Q_new)
-
-        target3 = []
-        for idx in range(len(done)):
-            Q_new = reward[idx]
-            if not done[idx]:
-                Q_new = reward[idx] + self.gamma * max([q[0] for q in self.model(next_state[idx])[2]])
-
-            target3.append(Q_new)
-
-        # convert to tensor
-        target1 = torch.tensor(target1, dtype=torch.float)
-        target2 = torch.tensor(target2, dtype=torch.float)
-        target3 = torch.tensor(target3, dtype=torch.float)
+        losses3 = []
+        for i in range(7):
+            target = pred3[i].clone()
+            for idx in range(len(done)):
+                Q_new = reward[idx]
+                if not done[idx]:
+                    Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx])[2][i])
+                target[idx][torch.argmax(action[idx][i+21]).item()] = Q_new
+            losses3.append(self.criterion3(target, pred3[i]))
 
         # clear gradients
         self.optimizer.zero_grad()
         # calculate loss
-        output_tensor1 = torch.cat(outputs1, dim=0)
-        output_index1 = torch.argmax(output_tensor1[action[0]])
-
-        output_tensor2 = torch.cat(outputs2, dim=0)
-        output_index2 = torch.argmax(output_tensor2[action[0]])
-
-        output_tensor3 = torch.cat(outputs3, dim=0)
-        output_index3 = torch.argmax(output_tensor3[action[0]])
-
-        loss1 = self.criterion(output_index1, target1)
-        loss2 = self.criterion(output_index2, target2)
-        loss3 = self.criterion(output_index3, target3)
-        loss = sum(flatten([loss1, loss2, loss3]))
-
+        loss1 = sum(losses1)
+        loss2 = sum(losses2)
+        loss3 = sum(losses3)
         # backpropagation
-        loss.backward()
+        loss1.backward(retain_graph=True)
+        loss2.backward(retain_graph=True)
+        loss3.backward(retain_graph=True)
         self.optimizer.step()
-
-    def flatten(l):
-        return [item for sublist in l for item in sublist]

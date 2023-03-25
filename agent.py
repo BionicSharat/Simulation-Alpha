@@ -24,7 +24,7 @@ class Agent:
     def __init__(self):
         self.n_games = 0
         self.n_runs = 0
-        self.model = Linear_QNet(input_size=48, hidden_size=512, output_sizes=[100, 7, 2])
+        self.model = Linear_QNet(input_size=48, hidden_size=512, output_sizes=[7, 14, 7])
         self.gamma = 0.99 # discount rate
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         self.epsilon = 0 # random rate
@@ -54,8 +54,9 @@ class Agent:
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        self.epsilon = 80 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
+        self.epsilon = 50 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
         final_move = []
+        print(random.randint(0, 80) < self.epsilon)
         if random.randint(0, 50) < self.epsilon:
             for i in range(7):
                 final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 100)])
@@ -64,11 +65,17 @@ class Agent:
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            move_tensor = prediction.flatten()
-            move_tensor = move_tensor.to(torch.int64)
-            move = move_tensor.tolist()
-            final_move = move
-        
+
+            l = []
+            l.extend([torch.argmax(i).item() for i in prediction[0]])
+            l.extend([torch.argmax(i).item() for i in prediction[1]])
+            l.extend([torch.argmax(i).item() for i in prediction[2]])
+            
+            for i in range(7):
+                final_move.extend([l[i], l[i+7], l[i+14]])
+            final_move.extend([l[i] for i in range(21,28)]) 
+
+            print(final_move, len(final_move))   
         return final_move
     
 def train():
@@ -104,7 +111,7 @@ def train():
                 agent.model.save()
             # print("avg", avg_sum/agent.n_games)
             
-            # print('Game Number: {0} | Turns: {1} | Fastest game: {2}'.format(agent.n_games, turn, shortest_game))
+            print('Game Number: {0} | Turns: {1} | Fastest game: {2}'.format(agent.n_games, turn, shortest_game))
 
             plot.plot(n_games_l, avg)
 if __name__ == '__main__':

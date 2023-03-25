@@ -78,12 +78,14 @@ class SimulationAI:
             self.Attacks.append([owner_start, end_loc, amountOfTroops, turns_till_arrive])
 
     def checkTroopsReached(self):
+        conquered = 0
         Arrived_l = []
         for indexAttack, group in enumerate(self.Attacks):
             if group[-1] == 1:
                 for index, i in enumerate(self.iceBergs):
                     if i["loc"] == group[1]:
                         if self.iceBergs[index]["troops"] - group[2] < 0:
+                            conquered += 1
                             self.iceBergs[index]["Owner"] = group[0]
                             self.iceBergs[index]["troops"] = abs(self.iceBergs[index]["troops"] - group[2])
                             Arrived_l.append(indexAttack)
@@ -98,6 +100,8 @@ class SimulationAI:
             except:
                 print("err")
         self.Attacks = deleted_l
+
+        return conquered
         
     def play(self, actions = []):
         try:
@@ -115,10 +119,10 @@ class SimulationAI:
                 if iceberg["Owner"] != -1:
                     iceberg["troops"] += (1 * iceberg["l"])
         
-        self.checkTroopsReached()
+        conquered_reward = self.checkTroopsReached()
         self.Turn += 1
 
-        return reward, win, self.Turn
+        return reward + conquered_reward * 3, win, self.Turn
 
 # Game
 # sim = SimulationAI(10000, 10000)
