@@ -2,6 +2,7 @@ import random
 import numpy as np
 from model import *
 import torch
+from new import IcebergGame
 
 # Plan
 # 1. init every time
@@ -37,7 +38,7 @@ class SimulationAI:
                 {"id": 4, "Owner": -1, "l": 1, "loc": [3967,1200], "troops": 10},
                 {"id": 5, "Owner": -1, "l": 1, "loc": [3967,2600], "troops": 10},
                 {"id": 6, "Owner": -1, "l": 1, "loc": [4520,1800], "troops": 20},
-                {"id": 7, "Owner": 1, "l": 1, "loc": [1300,600], "troops": 11}
+                {"id": 7, "Owner": 1, "l": 1, "loc": [5070,600], "troops": 11}
             ]
 
         for iceberg in self.iceBergs: 
@@ -48,9 +49,9 @@ class SimulationAI:
         reward = 0
         if (len([1 for i in self.iceBergs if i["Owner"] == 0 or i["Owner"] == 1]) == 8) or self.iceBergs[0]["Owner"] == self.iceBergs[-1]["Owner"]:
             if self.iceBergs[-1]["Owner"] == 0:
-                reward = 100 - 10 * self.Turn
+                reward = 10
             elif self.iceBergs[0]["Owner"] == 1:
-                reward = -100
+                reward = -10
             return True, reward
         else:
             return False, 0
@@ -61,7 +62,7 @@ class SimulationAI:
                 return index
 
     def turnsTillArrival(self, LocationStart, EndLocation):
-        distance = ((LocationStart[0] - EndLocation[1])**2 + (LocationStart[1] - EndLocation[1])**2)**(1/2)
+        distance = ((LocationStart[0] - EndLocation[0])**2 + (LocationStart[1] - EndLocation[1])**2)**(1/2)
         return round(distance/MovingSpeed)
 
     def upgradeLevel(self, idValue):
@@ -69,13 +70,18 @@ class SimulationAI:
             self.iceBergs[self.indexById(idValue)]["l"] += 1
             self.iceBergs[self.indexById(idValue)]["troops"] -= self.iceBergs[self.indexById(idValue)]["l"] * 10
 
-
     def sendTroops(self, idStart, idEnd, amountOfTroops):
         turns_till_arrive = self.turnsTillArrival(self.iceBergs[self.indexById(idStart)]["loc"], self.iceBergs[self.indexById(idEnd)]["loc"])
         end_loc = self.iceBergs[self.indexById(idEnd)]["loc"]
         owner_start = self.iceBergs[idStart]["Owner"]
         if (owner_start == 0):
-            self.Attacks.append([owner_start, end_loc, amountOfTroops, turns_till_arrive])
+            if amountOfTroops > self.iceBergs[self.indexById(idStart)]:
+                self.Attacks.append([owner_start, end_loc, self.iceBergs[self.indexById(idStart)]["troops"], turns_till_arrive])
+                self.iceBergs[self.indexById(idStart)]["troops"] = 0
+                IcebergGame.send_attack([1300/10, 600/10], [5070/10, 600/10], 30)
+            else:
+                self.Attacks.append([owner_start, end_loc, amountOfTroops, turns_till_arrive])
+                self.iceBergs[self.indexById(idStart)]["troops"] -= amountOfTroops
 
     def checkTroopsReached(self):
         conquered = 0
@@ -122,7 +128,7 @@ class SimulationAI:
         conquered_reward = self.checkTroopsReached()
         self.Turn += 1
 
-        return reward + conquered_reward * 3, win, self.Turn
+        return reward + conquered_reward, win, self.Turn
 
 # Game
 # sim = SimulationAI(10000, 10000)

@@ -6,6 +6,7 @@ import numpy as np
 from model import QTrainer, Linear_QNet
 from collections import Iterable
 import plot
+from new import IcebergGame
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -58,10 +59,11 @@ class Agent:
         final_move = []
         print(random.randint(0, 80) < self.epsilon)
         if random.randint(0, 50) < self.epsilon:
-            for i in range(7):
-                final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 100)])
-            for i in range(7):
-                final_move.append(random.randint(0, 1))
+            # for i in range(7):
+            #     final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 1000)])
+            # for i in range(7):
+            #     final_move.append(random.randint(0, 1))
+            final_move = [0, 7, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
@@ -77,7 +79,7 @@ class Agent:
 
             print(final_move, len(final_move))   
         return final_move
-    
+        
 def train():
     avg = []
     n_games_l = []
@@ -85,7 +87,9 @@ def train():
     shortest_game = 1e100
     agent = Agent()
     sim = SimulationAI(10000, 10000)
+    Visual = IcebergGame()
     while True:
+        Visual.step()
         # get old state
         state_old = agent.get_state(sim)
         # get action
@@ -99,17 +103,18 @@ def train():
         agent.remember(state_old, final_action, reward, state_new, win)
 
         if win:
+            
             # train long memoery
             sim.reset()
             agent.n_games += 1
             avg_sum += turn
-            avg.append(turn)
+            avg.append(avg_sum/agent.n_games)
             n_games_l.append(agent.n_games)
             agent.train_long_memory()
             if turn < shortest_game:
                 shortest_game = turn
                 agent.model.save()
-            # print("avg", avg_sum/agent.n_games)
+            print("avg", avg_sum/agent.n_games)
             
             print('Game Number: {0} | Turns: {1} | Fastest game: {2}'.format(agent.n_games, turn, shortest_game))
 

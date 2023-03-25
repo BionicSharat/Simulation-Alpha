@@ -1,0 +1,1 @@
+# TODO change attaack owner to loc start
