@@ -33,14 +33,14 @@ class IcebergGame:
 
         # Define the list of icebergs
         self.icebergs = [
-            {'x': 1300/10,  'y': 600/10, "troops": 11},
-            {'x': 1880/10,  'y': 1800/10, "troops": 11},
-            {'x': 2433/10, 'y': 1200/10, "troops": 10},
-            {'x': 2433/10, 'y': 2600/10, "troops": 10},
-            {'x': 3967/10, 'y': 1200/10, "troops": 10},
-            {'x': 3967/10, 'y': 2600/10, "troops": 10},
-            {'x': 4520/10, 'y': 1800/10, "troops": 10},
-            {'x': 5070/10, 'y': 600/10, "troops": 11},
+            {'x': 1300//10,  'y': 600//10, "troops": 11},
+            {'x': 1880//10,  'y': 1800//10, "troops": 10},
+            {'x': 2433//10, 'y': 1200//10, "troops": 10},
+            {'x': 2433//10, 'y': 2600//10, "troops": 10},
+            {'x': 3967//10, 'y': 1200//10, "troops": 10},
+            {'x': 3967//10, 'y': 2600//10, "troops": 10},
+            {'x': 4520//10, 'y': 1800//10, "troops": 10},
+            {'x': 5070//10, 'y': 600//10, "troops": 11},
         ]
 
         # Define the list of attacks
@@ -67,7 +67,7 @@ class IcebergGame:
         self.attacks.append({'start': start, 'end': end, 'num_steps': num_steps, 'size': self.attack_size, 'step': 0})
 
         # Start the attack animation
-        self.animate_attack(start, end, num_steps)
+        self.animate_attack(start, end, num_steps*10)
 
     def animate_attack(self, start, end, num_steps):
         # Calculate the distance and direction between the icebergs

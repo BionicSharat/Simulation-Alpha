@@ -73,8 +73,7 @@ class Agent:
                 final_move.extend([l[i], l[i+7], l[i+14]])
             final_move.extend([l[i] for i in range(21,28)]) 
         
-        print(final_move)
-        return final_move
+        return final_move    
         
 def train():
     avg = []
@@ -85,6 +84,9 @@ def train():
     sim = SimulationAI(10000, 10000)
     Visual = IcebergGame()
     while True:
+        for i in sim.visual_attacks:
+            Visual.send_attack(i[0], i[1], i[2])
+        sim.visual_attacks = []
         Visual.step()
         # get old state
         state_old = agent.get_state(sim)

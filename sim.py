@@ -24,6 +24,7 @@ class SimulationAI:
         self.Attacks
         self.Map
         self.iceBergs
+        self.visual_attacks = []
 
     def reset(self):
         self.Attacks = [] # [owner_start, end_loc, amountOfTroops, turns_till_arrive]
@@ -77,6 +78,7 @@ class SimulationAI:
         if (owner_start == 0 and amountOfTroops != 0):
             if amountOfTroops > self.iceBergs[self.indexById(idStart)]["troops"]:
                 self.Attacks.append([owner_start, end_loc, self.iceBergs[self.indexById(idStart)]["troops"], turns_till_arrive])
+                self.visual_attacks.append([[self.iceBergs[idStart]["loc"][0]//10, self.iceBergs[idStart]["loc"][1]//10], [end_loc[0]//10, end_loc[1]//10], turns_till_arrive])
                 self.iceBergs[self.indexById(idStart)]["troops"] = 0
             else:
                 self.Attacks.append([owner_start, end_loc, amountOfTroops, turns_till_arrive])
