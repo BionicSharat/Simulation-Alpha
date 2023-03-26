@@ -9,7 +9,7 @@ import plot
 from new import IcebergGame
 
 MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
+BATCH_SIZE = 200
 LR = 0.001
 
 def flatten(items):
@@ -52,10 +52,10 @@ class Agent:
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        self.epsilon = 50 - self.n_runs # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
+        self.epsilon = 90 - self.n_games # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
         final_move = []
         r_value = random.randint(0, 100)
-        if r_value < self.epsilon and r_value > 10:
+        if r_value < self.epsilon:
             for i in range(7):
                 final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 1000)])
             for i in range(7):
@@ -70,8 +70,10 @@ class Agent:
             l.extend([torch.argmax(i).item() for i in prediction[2]])
             
             for i in range(7):
-                final_move.extend([l[i], l[i+7], l[i+14]])
+
+                final_move.extend([l[i+7], l[i+14], l[i]])
             final_move.extend([l[i] for i in range(21,28)]) 
+            print(final_move)
         
         return final_move    
         
@@ -82,12 +84,13 @@ def train():
     shortest_game = 1e100
     agent = Agent()
     sim = SimulationAI(10000, 10000)
-    Visual = IcebergGame()
+    # Visual = IcebergGame()
     while True:
-        for i in sim.visual_attacks:
-            Visual.send_attack(i[0], i[1], i[2])
-        sim.visual_attacks = []
-        Visual.step()
+        # for i in sim.visual_attacks:
+        #     Visual.send_attack(i[0], i[1], i[2])
+        # sim.visual_attacks = []
+        # Visual.step()
+
         # get old state
         state_old = agent.get_state(sim)
         # get action
@@ -106,12 +109,13 @@ def train():
             sim.reset()
             agent.n_games += 1
             avg_sum += turn
-            avg.append(avg_sum/agent.n_games)
+            avg.append(turn)
             n_games_l.append(agent.n_games)
             agent.train_long_memory()
             if turn < shortest_game:
                 shortest_game = turn
                 agent.model.save()
+            
             print("avg", avg_sum/agent.n_games)
             print('Game Number: {0} | Turns: {1} | Fastest game: {2}'.format(agent.n_games, turn, shortest_game))
 

@@ -128,4 +128,5 @@ class SimulationAI:
         
         conquered_reward = self.checkTroopsReached()
         self.Turn += 1
+        print(reward + conquered_reward * 1)
         return reward + conquered_reward * 1, win, self.Turn

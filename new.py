@@ -29,7 +29,7 @@ class IcebergGame:
 
         # Define the size and duration of the attack animation
         self.attack_size = 10
-        self.attack_step_size = 20
+        self.attack_step_size = 1
 
         # Define the list of icebergs
         self.icebergs = [
