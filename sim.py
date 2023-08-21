@@ -55,7 +55,7 @@ class SimulationAI:
                 reward = -10
             return True, reward
         else:
-            return False, -0.01 * self.Turn
+            return False, -0.001 * self.Turn if self.Turn > 30 else 0
 
     def indexById(self, idValue):
         for index, i in enumerate(self.iceBergs):

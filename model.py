@@ -27,7 +27,7 @@ class Linear_QNet(nn.Module):
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
-        x = torch.relu(self.fc3(x))
+        x = self.fc3(x)
         outputs1 = [output(x) for output in self.outputs1]
         outputs2 = [output(x) for output in self.outputs2]
         outputs3 = [output(x) for output in self.outputs3]

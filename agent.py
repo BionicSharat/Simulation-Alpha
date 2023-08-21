@@ -9,7 +9,7 @@ import plot
 from new import IcebergGame
 
 MAX_MEMORY = 100_000
-BATCH_SIZE = 200
+BATCH_SIZE = 2000
 LR = 0.001
 
 def flatten(items):
@@ -52,9 +52,9 @@ class Agent:
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        self.epsilon = 90 - self.n_games # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
+        self.epsilon = 200 - self.n_games # action => [ [[startId, endId, troopsNum] * x] , [upgradeId] ]
         final_move = []
-        r_value = random.randint(0, 100)
+        r_value = random.randint(0, 200)
         if r_value < self.epsilon:
             for i in range(7):
                 final_move.extend([random.randint(0, 7), random.randint(0,7), random.randint(0, 1000)])
